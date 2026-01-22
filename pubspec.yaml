@@ -1,0 +1,29 @@
+name: auto_clean_arch_generator
+description: A Flutter/Dart package that automatically generates clean architecture code for API endpoints following the project's architecture patterns.
+version: 0.1.0
+homepage: https://github.com/yourusername/auto_clean_arch_generator
+repository: https://github.com/yourusername/auto_clean_arch_generator
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  args: ^2.4.2
+  dio: ^5.3.2
+  path: ^1.8.3
+  yaml: ^3.1.2
+  yaml_edit: ^2.2.3
+  recase: ^4.1.0
+  collection: ^1.17.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  test: ^1.25.8
+  flutter_lints: ^2.0.0
+
+executables:
+  auto_clean_arch: auto_clean_arch_generator
