@@ -1,50 +1,105 @@
-import 'package:args/args.dart';
+import 'dart:io';
 import 'package:auto_clean_arch_generator/src/generator.dart';
 
+/// Auto Clean Architecture Generator
+///
+/// A command-line tool that automatically generates clean architecture code
+/// with data-to-domain layer generation and core directory files for API endpoints.
+///
+/// This tool follows the same architecture patterns as the mygov_efiling project,
+/// creating complete clean architecture layers (Data, Domain, Core Network) with
+/// proper separation of concerns and standardized code patterns.
 void main(List<String> arguments) async {
-  final parser = ArgParser()
-    ..addOption('endpoint', abbr: 'e', help: 'API endpoint URL to generate code for')
-    ..addOption('method', abbr: 'm', help: 'HTTP method (GET, POST, PUT, DELETE)', defaultsTo: 'GET')
-    ..addOption('output', abbr: 'o', help: 'Output directory for generated files', defaultsTo: './generated')
-    ..addOption('project-path', abbr: 'p', help: 'Path to the Flutter project to update pubspec.yaml', defaultsTo: '.')
-    ..addFlag('help', abbr: 'h', help: 'Show this help message', negatable: false);
+  print('===========================================');
+  print('  Auto Clean Architecture Generator');
+  print('===========================================');
+  print('Automatically generates clean architecture code with data-to-domain layer generation');
+  print('and core directory files for API endpoints\n');
 
-  try {
-    final results = parser.parse(arguments);
+  // Interactive prompts for user input
+  stdout.write('Enter the API endpoint URL (e.g., /api/users or https://api.example.com/api/users): ');
+  String? endpoint = stdin.readLineSync()?.trim();
 
-    if (results['help'] as bool || arguments.isEmpty) {
-      print('Auto Clean Architecture Generator');
-      print('Automatically generates clean architecture code for API endpoints\n');
-      print(parser.usage);
-      return;
-    }
-
-    if (results['endpoint'] == null) {
-      print('Error: Endpoint is required. Use -e or --endpoint to specify the API endpoint.');
-      print(parser.usage);
-      return;
-    }
-
-    final endpoint = results['endpoint'] as String;
-    final method = results['method'] as String;
-    final outputDir = results['output'] as String;
-    final projectPath = results['project-path'] as String;
-
-    print('Welcome to Auto Clean Architecture Generator!');
-    print('Analyzing endpoint: $endpoint');
-
-    final generator = CleanArchitectureGenerator(outputDir);
-    await generator.generateFromEndpoint(endpoint, method.toUpperCase(), projectPath);
-
-    print('\nCode generation completed successfully!');
-    print('Files generated in: $outputDir');
-    if (projectPath != '.') {
-      print('Updated pubspec.yaml in: $projectPath');
-    } else {
-      print('Checked current directory for pubspec.yaml update');
-    }
-
-  } catch (e) {
-    print('Error: $e');
+  if (endpoint == null || endpoint.isEmpty) {
+    print('Error: Endpoint is required.');
+    return;
   }
+
+  stdout.write('Enter the endpoint name (e.g., users, products): ');
+  String? endpointName = stdin.readLineSync()?.trim();
+
+  if (endpointName == null || endpointName.isEmpty) {
+    // Extract from endpoint if not provided
+    endpointName = _extractEndpointName(endpoint);
+  }
+
+  stdout.write('Enter query parameters if available (press Enter if none): ');
+  String? queryParams = stdin.readLineSync()?.trim();
+
+  stdout.write('Enter HTTP method (GET/POST/PUT/DELETE) [default: GET]: ');
+  String? method = stdin.readLineSync()?.trim();
+  method = method?.toUpperCase() ?? 'GET';
+
+  // Validate method
+  if (!['GET', 'POST', 'PUT', 'DELETE'].contains(method)) {
+    print('Invalid method. Using GET as default.');
+    method = 'GET';
+  }
+
+  stdout.write('Enter output directory for generated files [default: ./lib/feature/$endpointName]: ');
+  String? outputDirInput = stdin.readLineSync()?.trim();
+  String outputDir = outputDirInput?.isEmpty == true
+    ? './lib/feature/$endpointName'
+    : outputDirInput!;
+
+  stdout.write('Enter project path to update pubspec.yaml [default: .]: ');
+  String? projectPathInput = stdin.readLineSync()?.trim();
+  String projectPath = projectPathInput?.isEmpty == true ? '.' : projectPathInput!;
+
+  print('\nGenerating clean architecture with the following parameters:');
+  print('- Endpoint: $endpoint');
+  print('- Endpoint Name: $endpointName');
+  print('- Method: $method');
+  if (queryParams != null && queryParams.isNotEmpty) {
+    print('- Query Parameters: $queryParams');
+  }
+  print('- Output Directory: $outputDir');
+  print('- Project Path: $projectPath');
+  print('');
+
+  stdout.write('Press Enter to continue or type "cancel" to abort: ');
+  String? confirmation = stdin.readLineSync()?.trim();
+
+  if (confirmation?.toLowerCase() == 'cancel') {
+    print('Operation cancelled by user.');
+    return;
+  }
+
+  print('\nGenerating clean architecture with data-to-domain layer and core directory files for endpoint: $endpoint');
+
+  final generator = CleanArchitectureGenerator(outputDir);
+  await generator.generateFromEndpoint(endpoint, method, projectPath);
+
+  print('\n===========================================');
+  print('Code generation completed successfully!');
+  print('Files generated in: $outputDir');
+  if (projectPath != '.') {
+    print('Updated pubspec.yaml in: $projectPath');
+  } else {
+    print('Checked current directory for pubspec.yaml update');
+  }
+  print('===========================================');
+}
+
+String _extractEndpointName(String endpoint) {
+  // Extract endpoint name from URL
+  // e.g., /api/users -> users, https://api.example.com/api/products -> products
+  final pathSegments = endpoint.replaceAll(RegExp(r'https?://[^/]+'), '').split('/');
+  final nonEmptySegments = pathSegments.where((segment) => segment.isNotEmpty).toList();
+
+  if (nonEmptySegments.isNotEmpty) {
+    return nonEmptySegments.last.toLowerCase();
+  }
+
+  return 'default';
 }
