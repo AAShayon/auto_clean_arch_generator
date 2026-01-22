@@ -8,6 +8,7 @@ void main() async {
   // This would generate code for a sample endpoint
   // await generator.generateFromEndpoint('/api/users', 'GET');
 
-  print('Auto Clean Architecture Generator example');
+  print(
+      'Auto Clean Architecture Generator example - generates clean architecture with data-to-domain layer and core directory files');
   print('Check the README.md for usage instructions');
 }
